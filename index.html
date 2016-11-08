@@ -1,0 +1,169 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Hello World!</title>
+	<style>
+		html, body{
+			padding: 0;
+			margin: 0;
+			width: 100%;
+		}
+		
+		html, body, button {
+			font-family: Courier;
+			font-size: 10pt;
+		}
+		
+		header{
+		}
+		
+		#chat{
+			clear: both;
+			width: 100%;
+		}
+		#displayChat {
+			height: 400px; 
+			background-color: #EEE; 
+			overflow-y: auto; 
+			padding: 15px; 
+			color: #333; 
+			font-size: 10pt;
+		}
+		
+		#txt {
+			width: 100%;
+			height: 25px;
+			padding: 5px;
+		}
+		
+		#connInfo {
+			list-style: none;
+			margin: 0;
+			padding: 0;
+		}
+		
+		#connInfo li label {
+			display: inline-block;
+			width: 115px;
+			font-weight: bold;
+		}
+
+		.chatText {
+			border-radius: 6px;
+			padding: 5px;
+			margin: 10px;
+		}
+	</style>
+</head>
+<body>
+	<header>
+		<ul id="connInfo">
+			<li>
+				<label for="txtConnectToID">Connect To:</label>
+				<input type="text" id="txtConnectToID"></input>
+				<button id="btnConnect">Connect</button>
+			</li>
+			<li>
+				<label for="lblID">ID:</label>
+				<span id="lblID"></label>
+			</li>
+			<li>
+				<label for="txtBackGroundColor">Background Color:</label>
+				<input class="jscolor" id="txtBackGroundColor"/>
+			</li>
+		</ul>
+	</header>
+	<section id="chat">
+		<div id="displayChat"></div>
+		<input id="txt" type="text" placeholder="Enter text..."></input>
+	</section>
+</body>
+
+	<script src="http://cdn.peerjs.com/0.3/peer.min.js"></script>
+	<script src="scripts/jscolor.min.js"></script>
+	<script>
+		
+		
+		var lblID = document.querySelector('#lblID');
+		var txt = document.querySelector('#txt');
+		var btnConnect = document.querySelector('#btnConnect');
+		
+		var txtConnectToID = document.querySelector('#txtConnectToID');
+		
+		var userID = "hmoob" + Math.floor((Math.random() * 9) + 1);
+
+		var peer = new Peer(userID, {
+			key: '2n029lpojemi',
+			
+			// Set highest debug level (log everything!).
+			//debug: 3,
+
+			// Set a logging function:
+			//logFunction: function() {
+			//	var copy = Array.prototype.slice.call(arguments).join(' ');
+			//	chatter(copy)
+			//}
+		});
+		var conn = "";
+		peer.on('open', function(id) {
+			lblID.textContent = id;
+			chatter("Waiting to connect...<br>");
+			
+			peer.on('connection', function(conn) { 
+				chatter("Connection has been made with <strong>" + conn.peer + "</strong><br>");
+				txtConnectToID.value = conn.peer;
+				
+				// Accepted response, and now connect to the peer
+				connect(txtConnectToID.value.trim());
+				
+				conn.on('data', function(data){
+					chatter(data);
+				});
+			});
+			
+			
+		});
+		
+		txt.addEventListener('keypress', function(key){
+			if (key.which == 13){
+				chatter("<strong>" + userID + "</strong>:  " +  formatText(txt.value));
+				conn.send("<strong>" + userID + "</strong>:  " + formatText(txt.value));
+				txt.value = "";
+			}
+		});
+		
+		btnConnect.addEventListener('click', function(){
+			
+			if (txtConnectToID.value.trim()){
+				connect(txtConnectToID.value.trim());
+				conn.on('data', function(data){
+					chatter(data);
+				});
+				
+				chatter("Connecting to " + txtConnectToID.value.trim() + "...")
+			}
+		});
+		
+		function chatter(text){
+			var displayChat = document.querySelector('#displayChat');
+
+			displayChat.innerHTML += text;
+
+			
+		}
+
+		function formatText(text){
+			var txtBackGroundColor = document.querySelector('#txtBackGroundColor');
+
+			var format = "<div class='chatText' style='background-color: #" + txtBackGroundColor.value +"'>" + text + "</div>";
+
+			return format;
+		}
+
+		function connect(ConnectionID){
+			if (!conn){
+				conn = peer.connect(ConnectionID);
+			}
+		}
+	</script>
+</html>
